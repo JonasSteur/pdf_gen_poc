@@ -1,0 +1,12 @@
+{{- if .Values.redis.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "pdf_gen_poc.fullname" . }}-redis
+  namespace: {{ .Values.nameSpace }}
+spec:
+  ports:
+  - port: {{ .Values.redis.service.port }}
+  selector:
+    app: pdf_gen_poc-redis
+{{- end }}

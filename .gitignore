@@ -1,0 +1,37 @@
+# Docker
+/docker-compose.override*.yml
+
+# Secrets
+/deployment/.ssh/id_rsa
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Unit test / coverage reports
+.coverage
+.coverage.*
+.cache
+.mypy_cache/
+.unit.coverage
+
+# Building python packages
+build
+src
+pip
+wheel
+venv
+.venv
+*~
+artifacts
+
+# PyCharm settings
+.idea
+.idea/*
+
+# virtualenv
+.venv/
+
+# celery beat schedule file
+celerybeat-schedule

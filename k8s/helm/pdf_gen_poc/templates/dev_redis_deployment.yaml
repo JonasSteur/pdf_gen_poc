@@ -1,0 +1,22 @@
+{{- if .Values.redis.enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ include "pdf_gen_poc.name" . }}-redis"
+  labels:
+    deployment: "{{ include "pdf_gen_poc.name" . }}-redis"
+  namespace: {{ .Values.nameSpace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: "{{ include "pdf_gen_poc.name" . }}-redis"
+  template:
+    metadata:
+      labels:
+        app: "{{ include "pdf_gen_poc.name" . }}-redis"
+    spec:
+      containers:
+        - name: "{{ include "pdf_gen_poc.name" . }}-redis"
+          image: "{{ .Values.redis.repository }}:{{ .Values.redis.tag }}"
+{{- end }}

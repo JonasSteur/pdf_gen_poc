@@ -1,0 +1,72 @@
+version: '3.4'
+
+networks:
+  shared_network:
+      external: true
+
+services:
+  pdf_gen_poc_mysql:
+    image: mariadb:10.8.2
+    # Full UTF-8 support
+    command: ["mysqld",
+      "--character-set-server=utf8mb4",
+      "--collation-server=utf8mb4_unicode_ci",
+      "--init-connect='SET NAMES utf8mb4;'",
+      "--character-set-client-handshake=FALSE"
+    ]
+    environment:
+      - MYSQL_ROOT_PASSWORD=pass
+      - MYSQL_DATABASE=pdf_gen_poc
+    ports:
+      - 3306:3306
+    networks:
+      - shared_network
+  pdf-gen-poc:
+    build:
+      context: .
+      target: dev
+    command: ["python", "manage.py", "runserver", "0.0.0.0:9000"]
+    environment:
+      - ALLOWED_HOSTS=*
+      - DEBUG=True
+      - DJANGO_SETTINGS_MODULE=pdf_gen_poc.settings
+      - DATABASE_URL=mysql://root:pass@pdf_gen_poc_mysql:3306/pdf_gen_poc?charset=utf8mb4
+      - VERIFY_SSL=False
+      - CACHE_URL=redis://pdf_gen_poc_redis:6379/0
+      - CELERY_BROKER_URL=redis://pdf_gen_poc_redis:6379/0
+    volumes:
+      - .:/app
+    ports:
+      - 9000:9000
+    depends_on:
+      - pdf_gen_poc_redis
+      - pdf_gen_poc_mysql
+    networks:
+      - shared_network
+  pdf_gen_poc_redis:
+      image: redis:3.2.11-alpine
+      ports:
+        - "6379:6379"
+      networks:
+      - shared_network
+  
+  pdf_gen_poc_celery:
+    container_name: pdf_gen_poc_celery
+    build:
+      context: .
+      target: dev
+    command: ["celery", "-A", "pdf_gen_poc", "worker", "-B"]
+    environment:
+      - DJANGO_SETTINGS_MODULE=pdf_gen_poc.settings
+      - SESSION_REDIS_URL=redis://pdf_gen_poc_redis:6379/0
+      - CACHE_URL=redis://pdf_gen_poc_redis:6379/0
+      - CELERY_BROKER_URL=redis://pdf_gen_poc_redis:6379/0
+      - DATABASE_URL=mysql://root:pass@pdf_gen_poc_mysql:3306/pdf_gen_poc?charset=utf8mb4
+    volumes:
+      - .:/app
+    depends_on:
+      - pdf_gen_poc_redis
+      - pdf_gen_poc_mysql
+    networks:
+      - shared_network
+  

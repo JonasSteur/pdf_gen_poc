@@ -1,0 +1,40 @@
+[run]
+branch = True
+omit =
+    # Ignore migrations
+    */migrations/*
+
+    # Ignore deployment files
+    requirements/*
+
+    # Ignore manage files
+    manage*
+
+    # Ignore admin files
+    */admin.py
+
+    # Ignore settings and test files
+    */settings*
+    *factories.py
+
+    # Ignore url files
+    pdf_gen_poc/urls*
+
+    # Ignore wsgi file
+    pdf_gen_poc/wsgi.py
+    # Ignore celery file
+    pdf_gen_poc/celery.py
+    
+
+    # Ignore exception declarations
+    pdf_gen_poc/exception_handlers/*.py
+
+[report]
+exclude_lines=
+    pragma: no cover
+    def __repr__
+    def __iter__
+    def __str__
+    raise NotImplementedError
+    raise UnreachableCode
+fail_under = 100

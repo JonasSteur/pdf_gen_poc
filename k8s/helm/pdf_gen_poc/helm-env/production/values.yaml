@@ -1,0 +1,86 @@
+replicaCount: 3
+
+image:
+  repository: 822523734328.dkr.ecr.eu-west-1.amazonaws.com/pdf_gen_poc
+  tag: latest
+
+nameOverride: ""
+fullnameOverride: ""
+
+nameSpace: "pdf_gen_poc"
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: true
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prd-dns
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/proxy-body-size: "16m"
+  hosts:
+    - host: pdf_gen.mobilevikings.be
+      paths:
+        - /
+    - host: pdf_gen.prd.mobilevikings.be
+      paths:
+        - /
+  tls:
+    - secretName: pdf_gen_poc-cert
+      hosts:
+        - pdf_gen.mobilevikings.be
+    - secretName: internal-pdf_gen_poc-cert
+      hosts:
+        - pdf_gen.prd.mobilevikings.be
+
+ingress_restricted:
+  enabled: true
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prd-dns
+    kubernetes.io/ingress.class: nginx
+    # 10.69.0.222/32  VPN1
+    # 10.69.0.230/32  VPN2
+    # 10.216.0.0/15   OFFICE INTERNAL NETWORK
+    # 10.27.0.0/16    PRD VPC
+    # 100.127.0.0/22  TSL
+    nginx.ingress.kubernetes.io/whitelist-source-range: 10.69.0.222/32,10.69.0.230/32,10.216.0.0/15,10.27.0.0/16,100.127.0.0/22
+  hosts:
+    - host: pdf_gen.prd.mobilevikings.be
+      paths:
+        - /admin
+    - host: pdf_gen.mobilevikings.be
+      paths:
+        - /admin
+
+memoryLimit:
+  django: "1000Mi"
+  celeryBeat: "300Mi"
+  celeryWorker: "1200Mi"
+
+memoryRequest:
+  django: "500Mi"
+  celeryBeat: "150Mi"
+  celeryWorker: "1000Mi"
+
+envSecrets:
+  - "DATABASE_URL"
+  - "CACHE_URL"
+  - "SENTRY_DSN"
+  - "CELERY_BROKER_URL"
+
+environment:
+  DEBUG: "False"
+  ALLOWED_HOSTS: "*"
+  DJANGO_CONFIG_CONTEXT: "production"
+  DJANGO_RUNTIME_CONTEXT: "uwsgi.pdf_gen_poc"
+  STATSD_HOST: "statsd.prd.mobilevikings.be"
+  UWSGI_CARBON_HOST: "10.27.28.6"
+
+iam_role: "arn:aws:iam::760949815414:role/MV-ROLE-PRD-SA-{{ "pdf_gen_poc" | upper }}"
+
+mariadb:
+  enabled: false
+
+redis:
+  enabled: false

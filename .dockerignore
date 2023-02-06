@@ -1,0 +1,12 @@
+Dockerfile
+docker-compose.*
+.git
+.gitignore
+.README.md
+Jenkinsfile*
+.idea/
+.github/
+.venv
+artifacts/
+htmlcov/
+.cache/

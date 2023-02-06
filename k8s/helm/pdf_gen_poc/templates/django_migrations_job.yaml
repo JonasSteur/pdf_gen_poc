@@ -1,0 +1,29 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: django-migrations
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
+spec:
+  template:
+    metadata:
+      name: django-migrations
+    spec:
+      containers:
+      - name: django-migrations
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        command: ["/venv/bin/python", "manage.py", "migrate"]
+        env:
+        {{- range $k, $v := .Values.environment }}
+          - name: {{ $k }}
+            value: {{ $v | quote }}
+        {{- end }}
+        {{- range .Values.envSecrets }}
+          - name: {{ . }}
+            valueFrom:
+              secretKeyRef:
+                name: pdf_gen_poc-secrets
+                key: {{ . | lower }}
+        {{- end }}
+      restartPolicy: Never

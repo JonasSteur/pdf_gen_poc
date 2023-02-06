@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ include "pdf_gen_poc.name" . }}-celery-beat"
+  labels:
+    deployment: "{{ include "pdf_gen_poc.name" . }}-celery-beat"
+  namespace: {{ .Values.nameSpace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      pod: "{{ include "pdf_gen_poc.name" . }}-celery-beat"
+  template:
+    metadata:
+      labels:
+        pod: "{{ include "pdf_gen_poc.name" . }}-celery-beat"
+    spec:
+      serviceAccountName: {{ include "pdf_gen_poc.fullname" . }}
+      containers:
+        - name: "{{ include "pdf_gen_poc.name" . }}-celery-beat"
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          command: ["/venv/bin/celery", "-A", "pdf_gen_poc", "beat"]
+          env:
+          {{- range $k, $v := .Values.environment }}
+            - name: {{ $k }}
+              value: {{ $v | quote }}
+          {{- end }}
+          {{- range .Values.envSecrets }}
+            - name: {{ . }}
+              valueFrom:
+                secretKeyRef:
+                  name: pdf_gen_poc-secrets
+                  key: {{ . | lower }}
+          {{- end }}
+          resources:
+            limits:
+              memory: {{ .Values.memoryLimit.celeryBeat }}
+            requests:
+              memory: {{ .Values.memoryRequest.celeryBeat }}

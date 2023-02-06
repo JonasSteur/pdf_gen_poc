@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ include "pdf_gen_poc.name" . }}-node"
+  labels:
+    app.kubernetes.io/name: {{ include "pdf_gen_poc.name" . }}
+    helm.sh/chart: {{ include "pdf_gen_poc.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+  namespace: {{ .Values.nameSpace }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "pdf_gen_poc.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: pdf_gen_poc-node
+        app.kubernetes.io/name: {{ include "pdf_gen_poc.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      serviceAccountName: {{ include "pdf_gen_poc.fullname" . }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          env:
+          {{- range $k, $v := .Values.environment }}
+            - name: {{ $k }}
+              value: {{ $v | quote }}
+          {{- end }}
+          {{- range .Values.envSecrets }}
+            - name: {{ . }}
+              valueFrom:
+                secretKeyRef:
+                  name: pdf_gen_poc-secrets
+                  key: {{ . | lower }}
+          {{- end }}
+          startupProbe:
+            httpGet:
+              path: /admin/login/?next=/en/admin/
+              port: 8000
+            initialDelaySeconds: 3
+            periodSeconds: 30
+          resources:
+            limits:
+              memory: {{ .Values.memoryLimit.django }}
+            requests:
+              memory: {{ .Values.memoryRequest.django }}
+      # Increase maximum number of connections that can be queued, linux kernel default is 128, which is quite low
+      initContainers:
+        - name: init-sysctl
+          image: busybox
+          command:
+            - /bin/sh
+            - -c
+            - sysctl -w net.core.somaxconn=1024
+          securityContext:
+            privileged: true

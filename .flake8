@@ -1,0 +1,6 @@
+[flake8]
+max-line-length = 120
+exclude = .?*,dist,build,src,wheel,*migrations,manage.py,deployment,pip,artifacts,build-scripts
+; Cyclomatic complexity check with mccabe.
+max-complexity = 10
+extend-ignore = E203, E302, W503
