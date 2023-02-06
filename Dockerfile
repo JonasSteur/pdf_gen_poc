@@ -16,7 +16,7 @@ ENV BUILD_DEPENDENCIES="\
 
 RUN set -ex \
     && apt-get update \
-    && apt-get install -y --no-install-recommends ${BUILD_DEPENDENCIES} libldap2-dev libmariadbclient-dev curl iputils-ping vim-tiny chromium-driver \
+    && apt-get install -y --no-install-recommends ${BUILD_DEPENDENCIES} libldap2-dev libmariadbclient-dev curl iputils-ping vim-tiny libpango-1.0-0 libpangoft2-1.0-0 libpangocairo-1.0-0\
     && python -m venv /venv \
     && . /venv/bin/activate \
     && pip install -U pip \
